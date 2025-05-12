@@ -1,0 +1,36 @@
+{
+    "bob": [
+        {
+        "sender": "bob",
+        "msg": "Hi my name is bob"
+        },
+        {
+            "sender": "martin",
+            "msg": "Hi bob my name is martin"
+        },
+        {
+            "sender": "bob",
+            "msg": "ok bye"
+        },
+        {
+            "sender": "bob",
+            "msg": "🧙‍♂️"
+        }
+    ],
+    "encrypted group for subject 38": [
+        {
+        "sender": "unknown",
+        "msg": "subject 38 doesn't speak anymore"
+        }
+    ],
+    "Léon XIV": [
+        {
+        "sender": "Léon XIV",
+        "msg": "I WON"
+        },
+        {
+            "sender": "martin",
+            "msg": "MEGA"
+        }
+    ]
+}
