@@ -42,10 +42,10 @@ export default {
   },
   async mounted() {
     try {
-      const conversationResponse = await fetch('/dummyConversation.json');
+      const conversationResponse = await fetch(`${import.meta.env.BASE_URL}dummyConversation.json`);
       this.conversations = await conversationResponse.json();
 
-      const contactResponse = await fetch('/dummyContacts.json');
+      const contactResponse = await fetch(`${import.meta.env.BASE_URL}dummyContacts.json`);
       this.contacts = await contactResponse.json();
 
     } catch (error) {
@@ -59,27 +59,27 @@ export default {
       required: true
     },
     activeTab: {
- type: String,
+      type: String,
       required: true
     }
   },
  methods: {
     selectContact(contact) {
- this.$emit('contact-selected', {
- contact: contact, activeTab: this.activeTab
+      this.$emit('contact-selected', {
+        contact: contact, activeTab: this.activeTab
       });
       console.log('activeTab:', this.activeTab);
- console.log('activeTab in selectContact:', this.activeTab);
+      console.log('activeTab in selectContact:', this.activeTab);
     },
     selectConversation(conversationName, messages) {
       this.$emit('conversation-selected', {
 
         name: conversationName,
- messages: messages,
- activeTab: this.activeTab
+        messages: messages,
+        activeTab: this.activeTab
       });
       console.log('activeTab:', this.activeTab);
- console.log('activeTab in selectConversation:', this.activeTab);
+      console.log('activeTab in selectConversation:', this.activeTab);
     },
 
     changeTab(tab) {

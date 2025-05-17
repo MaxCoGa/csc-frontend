@@ -8,7 +8,7 @@ import Contact from './components/Contact.vue';
 
 const isLoggedIn = ref(false);
 const showSettings = ref(false);
-const activeTab = ref('conversations'); // Add activeTab state
+const activeTab = ref('conversations'); // Add activeTab state use in MainApp.vue
 
 const handleLoginSuccess = () => {
   isLoggedIn.value = true;
