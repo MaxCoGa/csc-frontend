@@ -1,10 +1,11 @@
 <template>
   <div class="contact-details">
     <button @click="onCloseContact">Back</button>
-    <h2>Contact Details: {{contact. contact.name }}</h2>
+    <h2>Contact Details: {{contact.contact.name }}</h2>
     <p><strong>Name:</strong> {{ contact.contact.name }}</p>
     <p><strong>Id:</strong> {{ contact.contact.id }}</p>
     <p><strong>Type:</strong> {{ contact.contact.type }}</p>
+    <button @click="startConversation">Start Conversation</button>
   </div>
 </template>
 
@@ -21,6 +22,26 @@ export default {
   created() {
     console.log('Contact component created. Contact prop:', this.contact);
   },
+  methods: {
+    startConversation() {
+      console.log('Start Conversation button clicked for contact:', this.contact.conversationsList);
+      console.log(this.contact.conversationsList.name);
+      console.log(this.contact.conversationsList.messages);
+
+      if(!this.contact.conversationsList.name){
+        console.log('No conversations found!');
+      } else {
+        this.$emit('conversation-selected', {
+          name: this.contact.conversationsList.name,
+          messages: this.contact.conversationsList.messages,
+          activeTab: this.activeTab
+        });
+        this.onCloseContact();
+      }
+      
+      // this.$emit('start-conversation', this.contact);
+    }
+  }
 };
 </script>
 

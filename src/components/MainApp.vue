@@ -17,8 +17,13 @@
       <div v-if="activeTab === 'contacts'">
         <h2>Contacts</h2>
         <ul>
-          <li v-for="contact in contacts" :key="contact.name" @click="selectContact(contact)">
-            <strong>{{ contact.name }}</strong> ({{ contact.type }})
+          <li v-for="contact in contacts" :key="contact.name">
+            <div class="contact-item">
+              <span @click="selectContact(contact)">
+                <strong>{{ contact.name }}</strong> ({{ contact.type }})
+              </span>
+              <button @click="handleStartConversation(contact)">Start Chat</button>
+            </div>
           </li>
         </ul>
       </div>
@@ -64,16 +69,18 @@ export default {
     }
   },
  methods: {
-    selectContact(contact) {
+    selectContact(contact) { // emit to App.vue
+      const conversationsList = this.getContactConversations(contact);
       this.$emit('contact-selected', {
-        contact: contact, activeTab: this.activeTab
+        contact: contact, 
+        conversationsList: conversationsList,
+        activeTab: this.activeTab
       });
       console.log('activeTab:', this.activeTab);
       console.log('activeTab in selectContact:', this.activeTab);
     },
-    selectConversation(conversationName, messages) {
+    selectConversation(conversationName, messages) { // emit to App.vue
       this.$emit('conversation-selected', {
-
         name: conversationName,
         messages: messages,
         activeTab: this.activeTab
@@ -82,13 +89,65 @@ export default {
       console.log('activeTab in selectConversation:', this.activeTab);
     },
 
-    changeTab(tab) {
- this.$emit('tab-changed', tab);
+    changeTab(tab) { // emit to App.vue
+      this.$emit('tab-changed', tab);
     },
     greet(event) {
       console.log("activeTab value:", this.activeTab);
       // `event` is the native DOM event
-    }
+    },
+    getContactConversations(contact) {
+      console.log('Getting contact conversations for:'+ contact);
+
+      // Todo: refactor
+      const existingConversationName = Object.keys(this.conversations).find(
+        (conversationName) => conversationName === contact.name // Assuming conversation name is contact name, Todo: use id from convo_db
+      );
+
+      if(existingConversationName) {
+        console.log('convo exist:' + existingConversationName);
+      } else {
+        console.log('convo does not exist');
+      };
+      const existingConversationsList = {
+          name: existingConversationName,
+          messages: this.conversations[existingConversationName],
+        };
+
+      return existingConversationsList;
+
+
+
+    },
+    handleStartConversation(contact) {
+      console.log('Handling start or select conversation for contact:', contact);
+      // Find if a conversation with this contact already exists
+      const existingConversationName = Object.keys(this.conversations).find(
+        (conversationName) => conversationName === contact.name // Assuming conversation name is contact name, Todo: use id from convo_db
+      );
+
+      if (existingConversationName) {
+        console.log('conversation exist');
+        // If conversation exists, select it
+        this.selectedConversation = {
+          name: existingConversationName,
+          messages: this.conversations[existingConversationName],
+        };
+
+        this.selectConversation(existingConversationName, this.conversations[existingConversationName]);
+        
+      } else { // TODO: handle error
+        console.log('conversation does not exist');
+        // If conversation doesn't exist, create a new one
+        const newConversationName = contact.name; // Assuming new conversation name is contact name
+        this.$set(this.conversations, newConversationName, []); // Use Vue.set to ensure reactivity
+        this.selectedConversation = {
+          name: newConversationName,
+          messages: this.conversations[newConversationName],
+        };
+      }
+      this.selectedContact = null; // Clear selected contact after handling conversation
+    },
   },
 
   

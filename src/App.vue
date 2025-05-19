@@ -37,6 +37,7 @@ const selectedContact = ref(null);
 
 const handleContactSelected = (contact) => {
   selectedContact.value = contact;
+  // console.log('test:'+contact.contact.name);
 };
 
 const handleCloseContact = () => {
@@ -55,7 +56,7 @@ const handleTabChange = (tab) => {
     <LoginSignUp @login-success="handleLoginSuccess" />
   </div>
   <UserSettings v-else-if="showSettings" @hide-settings="handleHideSettings" />
-  <Contact v-else-if="selectedContact" :contact="selectedContact" @close-contact="handleCloseContact" />
+  <Contact v-else-if="selectedContact" :contact="selectedContact" @close-contact="handleCloseContact" @conversation-selected="handleConversationSelected"/>
   <Conversation v-else-if="selectedConversation" :conversation="selectedConversation" @close-conversation="handleCloseConversation" />
   <MainApp v-else :activeTab="activeTab" @show-settings="handleShowSettings" @conversation-selected="handleConversationSelected" @contact-selected="handleContactSelected" @tab-changed="handleTabChange" />
 </template>
