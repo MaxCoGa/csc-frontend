@@ -2,7 +2,7 @@
   <div class="conversation-container">
     <button @click="onCloseConversation">Back</button>
     <h2>{{ conversation.name }}</h2>
-    <div class="messages-list" ref="messagesList">
+    <div class="messages-list" ref="messagesList" @scroll="handleScroll">
       <div v-for="(message, index) in conversation.messages" :key="index" class="message">
         <strong>{{ message.sender }}:</strong> {{ message.msg }}
       </div>
@@ -59,6 +59,7 @@ export default {
       const isAtBottom = messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1; // Add a small buffer
 
       if (isAtBottom) {
+        this.showNewMessageNotification = false;
         this.$nextTick(() => {
           messagesList.scrollTop = messagesList.scrollHeight;
         });
@@ -70,6 +71,14 @@ export default {
       this.showNewMessageNotification = false;
       this.$refs.messagesList.scrollTop = this.$refs.messagesList.scrollHeight;
     },
+    handleScroll() {
+      const messagesList = this.$refs.messagesList;
+      // Check if the user has scrolled to the bottom
+      const isAtBottom = messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1; // Add a small buffer
+      if (isAtBottom) {
+        this.showNewMessageNotification = false;
+      }
+    }
 
   },
 };
