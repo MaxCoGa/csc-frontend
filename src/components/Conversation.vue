@@ -1,24 +1,38 @@
 <template> 
   <div class="conversation-container">
-    <button @click="onCloseConversation">Back</button>
-    <h2>{{ conversation.name }}</h2>
+    <div class="header-buttons">
+      <button @click="onCloseConversation">Back</button>
+      <button @click="handleConverse">Converse</button>
+    </div>
+    <div class="conversation-title" style="display: flex; align-items: center;">
+      <img src="https://i.pravatar.cc/50" alt="User avatar" style="max-width: 100%; margin-right: 10px;">
+      <h2>{{ conversation.name }}</h2> 
+    </div>
     <div class="messages-list" ref="messagesList" @scroll="handleScroll">
       <div v-for="(message, index) in conversation.messages" :key="index" class="message">
-        <strong>{{ message.sender }}:</strong> {{ message.msg }}
+        <strong>{{ message.sender }}:</strong> <span v-html="message.msg"></span>
       </div>
     </div>
     <div v-if="showNewMessageNotification" class="new-message-notification" @click="scrollToBottom">
-      New message received
-    </div>
+      New message(s)
+    </div> 
     <div class="message-input">
-      <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." />
+      <input v-model="newMessage" @keyup.enter="sendMessage" @paste="handlePaste" placeholder="Type a message..." ></input>
+      <button @click="sendImage">Img</button>
       <button @click="sendMessage">Send</button>
+      <input type="file" ref="imageInput" accept="image/*" style="display: none;" @change="handleImageSelected">
+
     </div>
   </div>
 </template>
 
 <script>
 export default {
+  mounted() {
+    // Scroll to the bottom when the component is mounted
+    this.$refs.messagesList.scrollTop = this.$refs.messagesList.scrollHeight;
+  },
+
   name: 'Conversation',
   props: {
     onCloseConversation: Function, // Prop for closing the conversation
@@ -31,14 +45,14 @@ export default {
     return {
       newMessage: '',
       showNewMessageNotification: false,
-    };
+    }
   },
   methods: {
     // This is a mock send message function.
     // In a real app, this would send the message to the backend.
     sendMessage() {
       if (this.newMessage.trim() !== '') {
-        console.log("msg sent: " + this.newMessage);
+        // console.log("msg sent: " + this.newMessage);
         const newMsg = {
           sender: 'You', // Assuming the current user is "You" for mock data
           msg: this.newMessage.trim(),
@@ -47,11 +61,30 @@ export default {
         this.newMessage = '';
       }
     },
+    sendImage() {
+     this.$refs.imageInput.click();
+    },
+    handleImageSelected(event) {
+      const file = event.target.files[0];
+      // console.log('Selected file:', file);
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          // console.log('Image Base64:', e.target.result);
+          this.addFakeMessage(e.target.result);
+          this.clearFileInput(event);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
     addFakeMessage(msg) {
-      console.log("Fake msg received: " + msg);
+      // console.log("Fake msg received: " + msg);
+
+      const handleMsg = this.handleMessage(msg);
+
       this.conversation.messages.push({
         sender: 'You',
-        msg: msg,
+        msg: handleMsg,
       });
 
       const messagesList = this.$refs.messagesList;
@@ -78,8 +111,54 @@ export default {
       if (isAtBottom) {
         this.showNewMessageNotification = false;
       }
-    }
+    },
+    clearFileInput(event) {
+      event.target.value = '';
+    },
+    handleMessage(msg) {
+      // console.log("handling: " + msg);
+      // Check if the message is a Base64 image
+      if (msg.startsWith('data:image/') && msg.includes(';base64,')) {
+        return `<img src="${msg}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
+      } else {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const messageWithLinks = msg.replace(urlRegex, (url) => {
+          const imageRegex = /\.(jpg|png|jpeg|webp|gif)$/i;
+          if (imageRegex.test(url)) {
+            return `<img src="${url}" alt="User uploaded image" style="max-width: 100%;">`;
+          } else {
+            return `<a href="${url}" target="_blank">${url}</a>`;
+          }
+        });
 
+        return messageWithLinks;
+      }
+    },
+    handlePaste(event) {
+      const items = event.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          // console.log('Pasted image file:', file.name);
+          if (file) {
+            event.preventDefault(); // Prevent default paste only for images
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              // console.log('Pasted Image Base64:', e.target.result);
+
+              this.addFakeMessage(e.target.result);
+              this.clearFileInput(event);
+            };
+            reader.readAsDataURL(file);
+          }
+          break; // Stop after finding the first image
+        }
+      }
+    },
+    handleConverse() {
+      console.log("fake Converse")
+    }
   },
 };
 </script>
