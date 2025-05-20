@@ -9,8 +9,11 @@
     <main class="middle-section">
       <div v-if="activeTab === 'conversations'">
         <h2>Conversations</h2>        <ul>
-          <li v-for="(messages, conversationName) in conversations" :key="conversationName" @click="selectConversation(conversationName, messages)">
-            <strong>{{ conversationName }}:</strong> {{ messages[messages.length - 1].sender }}: {{ messages[messages.length - 1].msg }}
+          <li v-for="(messages, conversationName) in conversations" :key="conversationName">
+            <span @click="selectConversation(conversationName, messages)">
+              <strong>{{ conversationName }}:</strong> {{ messages[messages.length - 1].sender }}: {{ messages[messages.length - 1].msg }}
+            </span>
+            <button @click="getConversationsContact(conversationName)">Info</button>
           </li>
         </ul>
       </div>
@@ -96,6 +99,22 @@ export default {
       console.log("activeTab value:", this.activeTab);
       // `event` is the native DOM event
     },
+    getConversationsContact(conversationName) {
+      console.log('Getting contact for conversation:' + conversationName);
+
+      // Todo: refactor
+      const foundContact = this.contacts.find(
+        (contact) => contact.name === conversationName
+      );
+
+      if(foundContact) {
+        console.log('Found contact:', foundContact);
+      } else {
+        console.log('contact does not exist');
+      };
+
+      return foundContact;
+    },
     getContactConversations(contact) {
       console.log('Getting contact conversations for:'+ contact);
 
@@ -113,11 +132,7 @@ export default {
           name: existingConversationName,
           messages: this.conversations[existingConversationName],
         };
-
       return existingConversationsList;
-
-
-
     },
     handleStartConversation(contact) {
       console.log('Handling start or select conversation for contact:', contact);

@@ -18,9 +18,9 @@
     </div> 
     <div class="message-input">
       <input v-model="newMessage" @keyup.enter="sendMessage" @paste="handlePaste" placeholder="Type a message..." ></input>
-      <button @click="sendImage">Img</button>
+      <button @click="sendUpload">Upload</button>
       <button @click="sendMessage">Send</button>
-      <input type="file" ref="imageInput" accept="image/*" style="display: none;" @change="handleImageSelected">
+      <input type="file" ref="uploadInput" accept="image/*,audio/*,video/*" style="display: none;" @change="handleUploadSelected">
 
     </div>
   </div>
@@ -61,15 +61,26 @@ export default {
         this.newMessage = '';
       }
     },
-    sendImage() {
-     this.$refs.imageInput.click();
+    sendUpload() {
+     this.$refs.uploadInput.click();
     },
-    handleImageSelected(event) {
+    handleUploadSelected(event) {
       const file = event.target.files[0];
       // console.log('Selected file:', file);
       if (file) {
         const reader = new FileReader();
+        const fileType = file.type.split('/')[0]; // Get the file type (image, audio, video)
         reader.onload = (e) => {
+          // let messageContent;
+          // if (fileType === 'image') {
+          //    messageContent = `<img src="${e.target.result}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
+          // } else if (fileType === 'audio') {
+          //   messageContent = `<audio controls src="${e.target.result}"></audio>`;
+          // } else if (fileType === 'video') {
+          //    messageContent = `<video controls src="${e.target.result}" style="max-width: 100%;"></video>`;
+          // }
+          // this.addFakeMessage(messageContent);
+
           // console.log('Image Base64:', e.target.result);
           this.addFakeMessage(e.target.result);
           this.clearFileInput(event);
@@ -118,21 +129,40 @@ export default {
     handleMessage(msg) {
       // console.log("handling: " + msg);
       // Check if the message is a Base64 image
-      if (msg.startsWith('data:image/') && msg.includes(';base64,')) {
-        return `<img src="${msg}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
-      } else {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const messageWithLinks = msg.replace(urlRegex, (url) => {
-          const imageRegex = /\.(jpg|png|jpeg|webp|gif)$/i;
-          if (imageRegex.test(url)) {
-            return `<img src="${url}" alt="User uploaded image" style="max-width: 100%;">`;
-          } else {
-            return `<a href="${url}" target="_blank">${url}</a>`;
+      if (msg.startsWith('data:')) {
+        // Handle Base64 data (image, audio, video)
+        if (msg.startsWith('data:image/')) {
+          return `<img src="${msg}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
+        } else if (msg.startsWith('data:audio/')) {
+          return `<audio controls src="${msg}"></audio>`;
+        } else if (msg.startsWith('data:video/')) {
+          return `<video controls src="${msg}" style="max-width: 100%;"></video>`;
+        }
+      }
+      // TODO: check if url doesnt return an empty object
+      // TODO: audio and video crash chromium(bug?) on new tab
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const messageWithLinks = msg.replace(urlRegex, (url) => {
+        const imageRegex = /\.(jpg|png|jpeg|webp|gif)$/i;
+        const audioRegex = /\.(midi|mp3|wav|ogg)$/i;
+        if (imageRegex.test(url)) {
+          return `<img src="${url}" alt="User uploaded image" style="max-width: 100%;">`;
+        } else {
+            if (audioRegex.test(url)) {
+              return `<audio controls src="${url}"></audio>`;
+
+            } else {
+              const videoRegex = /\.(avi|mov|mp4|ogg|wmv|webm)$/i;
+              if (videoRegex.test(url)) {
+                return `<video controls src="${url}" style="max-width: 100%;"></video>`;
+            } else {
+              return `<a href="${url}" target="_blank">${url}</a>`;
+            }
+          }
           }
         });
 
-        return messageWithLinks;
-      }
+      return messageWithLinks;
     },
     handlePaste(event) {
       const items = event.clipboardData.items;
