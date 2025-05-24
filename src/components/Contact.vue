@@ -1,16 +1,22 @@
 <template>
   <div class="contact-details">
     <button @click="onCloseContact">Back</button>
-    <h2>Contact Details: {{contact.contact.name }}</h2>
-    <p><strong>Name:</strong> {{ contact.contact.name }}</p>
-    <p><strong>Id:</strong> {{ contact.contact.id }}</p>
-    <p><strong>Type:</strong> {{ contact.contact.type }}</p>
+    <h2>Contact Details: {{ contact.contactInfo.name }}</h2>
+    <p><strong>Name:</strong> {{ contact.contactInfo.name }}</p>
+    <p><strong>Id:</strong> {{ contact.contactInfo.id }}</p>
+    <p><strong>Type:</strong> {{ contact.contactInfo.type }}</p>
     <button @click="startConversation">Start Conversation</button>
   </div>
 </template>
 
 <script>
 export default {
+  mounted() {
+    document.title = this.contact.contactInfo.name;
+  },
+  unmounted() {
+    document.title = 'CSC';
+  },
   name: 'Contact',
   props: {
     contact: {
@@ -25,15 +31,17 @@ export default {
   methods: {
     startConversation() {
       console.log('Start Conversation button clicked for contact:', this.contact.conversationsList);
-      console.log(this.contact.conversationsList.name);
-      console.log(this.contact.conversationsList.messages);
+      // console.log(this.contact.conversationsList.name);
+      // console.log(this.contact.conversationsList.messages);
 
       if(!this.contact.conversationsList.name){
         console.log('No conversations found!');
       } else {
+
         this.$emit('conversation-selected', {
           name: this.contact.conversationsList.name,
           messages: this.contact.conversationsList.messages,
+          contactsList: this.contact.contactInfo,
           activeTab: this.activeTab
         });
         this.onCloseContact();

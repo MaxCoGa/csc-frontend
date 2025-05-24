@@ -8,12 +8,14 @@
     </header>
     <main class="middle-section">
       <div v-if="activeTab === 'conversations'">
-        <h2>Conversations</h2>        <ul>
+        <h2>Conversations</h2>        
+        <ul>
           <li v-for="(messages, conversationName) in conversations" :key="conversationName">
             <span @click="selectConversation(conversationName, messages)">
               <strong>{{ conversationName }}:</strong> {{ messages[messages.length - 1].sender }}: {{ messages[messages.length - 1].msg }}
             </span>
             <button @click="getConversationsContact(conversationName)">Info</button>
+            <button @click="handleConversationsContact(conversationName)">Info2</button>
           </li>
         </ul>
       </div>
@@ -75,7 +77,7 @@ export default {
     selectContact(contact) { // emit to App.vue
       const conversationsList = this.getContactConversations(contact);
       this.$emit('contact-selected', {
-        contact: contact, 
+        contactInfo: contact, 
         conversationsList: conversationsList,
         activeTab: this.activeTab
       });
@@ -83,9 +85,11 @@ export default {
       console.log('activeTab in selectContact:', this.activeTab);
     },
     selectConversation(conversationName, messages) { // emit to App.vue
+      const contactsList = this.getConversationsContact(conversationName);
       this.$emit('conversation-selected', {
         name: conversationName,
         messages: messages,
+        contactsList: contactsList,
         activeTab: this.activeTab
       });
       console.log('activeTab:', this.activeTab);
@@ -93,6 +97,7 @@ export default {
     },
 
     changeTab(tab) { // emit to App.vue
+      document.title = tab;
       this.$emit('tab-changed', tab);
     },
     greet(event) {
@@ -114,6 +119,22 @@ export default {
       };
 
       return foundContact;
+    },
+    handleConversationsContact(conversationName){
+      console.log('Handling start or select contact for conversation:', conversationName);
+
+      // Todo: refactor
+      const foundContact = this.contacts.find(
+        (contact) => contact.name === conversationName
+      );
+
+      if(foundContact) {
+        console.log('Found contact:', foundContact);
+        this.selectContact(foundContact);
+      } else {
+        console.log('contact does not exist');
+      };
+
     },
     getContactConversations(contact) {
       console.log('Getting contact conversations for:'+ contact);

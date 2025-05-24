@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import LoginSignUp from './components/LoginSignUp.vue'
 import MainApp from './components/MainApp.vue'
 import Conversation from './components/Conversation.vue';
@@ -24,8 +24,8 @@ const handleHideSettings = () => {
 
 const selectedConversation = ref(null);
 
-const handleConversationSelected = (conversation) => {
-  selectedConversation.value = conversation;
+const handleConversationSelected = (conversationProp) => {
+  selectedConversation.value = conversationProp;
 };
 
 const handleCloseConversation = () => {
@@ -35,8 +35,8 @@ const handleCloseConversation = () => {
 
 const selectedContact = ref(null);
 
-const handleContactSelected = (contact) => {
-  selectedContact.value = contact;
+const handleContactSelected = (contactProp) => {
+  selectedContact.value = contactProp;
   // console.log('test:'+contact.contact.name);
 };
 
@@ -48,6 +48,14 @@ const handleTabChange = (tab) => {
   activeTab.value = tab;
 };
 
+// watch(selectedConversation, (newValue) => {
+//   if (newValue) {
+//     document.title = newValue.name;
+//   } else {
+//     document.title = 'test';
+//   }
+// });
+
 
 </script>
 
@@ -57,7 +65,7 @@ const handleTabChange = (tab) => {
   </div>
   <UserSettings v-else-if="showSettings" @hide-settings="handleHideSettings" />
   <Contact v-else-if="selectedContact" :contact="selectedContact" @close-contact="handleCloseContact" @conversation-selected="handleConversationSelected"/>
-  <Conversation v-else-if="selectedConversation" :conversation="selectedConversation" @close-conversation="handleCloseConversation" />
+  <Conversation v-else-if="selectedConversation" :conversation="selectedConversation" @close-conversation="handleCloseConversation" @contact-selected="handleContactSelected" />
   <MainApp v-else :activeTab="activeTab" @show-settings="handleShowSettings" @conversation-selected="handleConversationSelected" @contact-selected="handleContactSelected" @tab-changed="handleTabChange" />
 </template>
 

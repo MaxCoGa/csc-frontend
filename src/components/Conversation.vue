@@ -7,6 +7,7 @@
     <div class="conversation-title" style="display: flex; align-items: center;">
       <img src="https://i.pravatar.cc/50" alt="User avatar" style="max-width: 100%; margin-right: 10px;">
       <h2>{{ conversation.name }}</h2> 
+      <button @click="startContact">Start Contact</button>
     </div>
     <div class="messages-list" ref="messagesList" @scroll="handleScroll">
       <div v-for="(message, index) in conversation.messages" :key="index" class="message">
@@ -30,6 +31,7 @@
 export default {
   mounted() {
     // Scroll to the bottom when the component is mounted
+    document.title = this.conversation.name;
     this.$refs.messagesList.scrollTop = this.$refs.messagesList.scrollHeight;
   },
 
@@ -37,9 +39,12 @@ export default {
   props: {
     onCloseConversation: Function, // Prop for closing the conversation
     conversation: {
-      type: Object, // Correct type as we pass the object { name, messages }
+      type: Object, // Correct type as we pass the object { name, messages, contactsList }
       required: true
     },
+  },
+  unmounted() {
+    document.title = 'CSC';
   },
   data() {
     return {
@@ -88,7 +93,7 @@ export default {
         reader.readAsDataURL(file);
       }
     },
-    addFakeMessage(msg) {
+    addFakeMessage(msg) { // received from backend
       // console.log("Fake msg received: " + msg);
 
       const handleMsg = this.handleMessage(msg);
@@ -126,43 +131,50 @@ export default {
     clearFileInput(event) {
       event.target.value = '';
     },
-    handleMessage(msg) {
-      // console.log("handling: " + msg);
+    handleMessage(msg) { // backend
+      // Basic sanitization: Replace < and > with their HTML entities
+      console.log("dom injection detected..."); // CTF
+      let sanitizedMessage = msg.replace(/</g, '&lt;');
+      sanitizedMessage = sanitizedMessage.replace(/>/g, '&gt;');
+
+      // console.log("handling: " + sanitizedMessage);
       // Check if the message is a Base64 image
-      if (msg.startsWith('data:')) {
+      if (sanitizedMessage.startsWith('data:')) {
         // Handle Base64 data (image, audio, video)
-        if (msg.startsWith('data:image/')) {
-          return `<img src="${msg}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
-        } else if (msg.startsWith('data:audio/')) {
-          return `<audio controls src="${msg}"></audio>`;
-        } else if (msg.startsWith('data:video/')) {
-          return `<video controls src="${msg}" style="max-width: 100%;"></video>`;
+        if (sanitizedMessage.startsWith('data:image/')) {
+          return `<img src="${sanitizedMessage}" alt="User uploaded image" style="max-width: 100%;" onerror="console.error('corrupted base64 img')">`;
+        } else if (sanitizedMessage.startsWith('data:audio/')) {
+          return `<audio controls src="${sanitizedMessage}"></audio>`;
+        } else if (sanitizedMessage.startsWith('data:video/')) {
+          return `<video controls src="${sanitizedMessage}" style="max-width: 100%;"></video>`;
         }
       }
       // TODO: check if url doesnt return an empty object
-      // TODO: audio and video crash chromium(bug?) on new tab
+      // TODO: audio and video crash chromium(bug?) on new tab // should i remove the TODOs?
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const messageWithLinks = msg.replace(urlRegex, (url) => {
-        const imageRegex = /\.(jpg|png|jpeg|webp|gif)$/i;
-        const audioRegex = /\.(midi|mp3|wav|ogg)$/i;
-        if (imageRegex.test(url)) {
-          return `<img src="${url}" alt="User uploaded image" style="max-width: 100%;">`;
-        } else {
-            if (audioRegex.test(url)) {
-              return `<audio controls src="${url}"></audio>`;
+      let messageWithLinks;
 
-            } else {
-              const videoRegex = /\.(avi|mov|mp4|ogg|wmv|webm)$/i;
-              if (videoRegex.test(url)) {
-                return `<video controls src="${url}" style="max-width: 100%;"></video>`;
-            } else {
-              return `<a href="${url}" target="_blank">${url}</a>`;
-            }
-          }
+      if (urlRegex.test(sanitizedMessage)) {
+        console.log("link detected..."); // CTF
+        messageWithLinks = sanitizedMessage.replace(urlRegex, (url) => {
+          const imageRegex = /\.(jpg|png|jpeg|webp|gif)$/i;
+          const audioRegex = /\.(midi|mp3|wav|ogg)$/i;
+          const videoRegex = /\.(avi|mov|mp4|ogg|wmv|webm)$/i;
+
+          if (imageRegex.test(url)) {
+            return `<img src="${url}" alt="User uploaded image" style="max-width: 100%;">`;
+          } else if (audioRegex.test(url)) {
+            return `<audio controls src="${url}"></audio>`;
+          } else if (videoRegex.test(url)) {
+            return `<video controls src="${url}" style="max-width: 100%;"></video>`;
+          } else {
+            return `<a href="${url}" target="_blank">${url}</a>`;
           }
         });
+        return messageWithLinks;
+      };
 
-      return messageWithLinks;
+      return sanitizedMessage;
     },
     handlePaste(event) {
       const items = event.clipboardData.items;
@@ -188,6 +200,29 @@ export default {
     },
     handleConverse() {
       console.log("fake Converse")
+    },
+    startContact() {
+      console.log('Start Conversation button clicked for contact:', this.conversation);
+
+      if(!this.conversation.contactsList){
+        console.log('No conversations found!');
+      } else {
+
+        const selectedConversation = {
+          name: this.conversation.name,
+          messages: this.conversation.messages,
+        };
+
+        this.$emit('contact-selected', {
+          contactInfo: this.conversation.contactsList, 
+          conversationsList: selectedConversation,
+          activeTab: this.activeTab
+        });
+
+        this.onCloseConversation();
+      }
+      
+      // this.$emit('start-conversation', this.contact);
     }
   },
 };
